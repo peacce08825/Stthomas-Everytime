@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>시간표 · Timetable</title>
+<title>Timetable</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -26,7 +26,6 @@ input,select,textarea{font-family:var(--sans);font-size:14px;color:var(--ink)}
 
 header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 0 6px;flex-wrap:wrap}
 .wordmark{font-family:var(--display);font-size:24px;color:var(--accent-dark)}
-.wordmark .ko{font-family:var(--sans);font-weight:700;font-size:14px;color:var(--muted);margin-left:8px}
 .me{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .chip{background:var(--accent-soft);color:var(--accent-dark);border:none;border-radius:999px;padding:3px 11px;font-weight:700;font-size:12.5px}
 
@@ -84,15 +83,17 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:10p
 .gaps .slot{background:var(--ok-soft);color:var(--ok);border-radius:6px;padding:1px 8px;font-weight:500;font-size:12.5px;margin:1px 4px 1px 0;display:inline-block}
 .gaps .none{color:var(--faint)}
 
+.boardbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .board-compose{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
 .board-compose textarea{width:100%;border:1px solid var(--line2);border-radius:8px;padding:9px 11px;min-height:64px;resize:vertical;background:#fff}
 .board-compose .row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap}
 .board-compose .anon{color:var(--faint);font-size:12.5px}
+.board-desc{color:var(--muted);font-size:13px;margin:0 0 10px 2px}
 .post{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
 .post .meta{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--faint)}
 .post .meta b{color:var(--accent-dark);font-size:13px}
 .post .txt{margin:6px 0 2px;white-space:pre-wrap;word-break:break-word}
-.post .foot{display:flex;gap:10px;margin-top:6px}
+.post .foot{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
 .post .foot button{border:none;background:none;color:var(--muted);font-size:12.5px;padding:2px 0}
 .post .foot button:hover{color:var(--accent)}
 .cmts{border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
@@ -102,6 +103,24 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:10p
 .cmt .when{color:var(--faint);font-size:11.5px;margin-left:6px}
 .cmt-row{display:flex;gap:6px;margin-top:8px}
 .cmt-row input{flex:1;border:1px solid var(--line2);border-radius:8px;padding:7px 10px;background:#fff}
+
+.chatlist .item{display:flex;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:8px;cursor:pointer;align-items:center}
+.chatlist .item:hover{border-color:var(--accent)}
+.chatlist .who{font-weight:700}
+.chatlist .who .tag{font-weight:500;font-size:11.5px;color:var(--accent-dark);background:var(--accent-soft);border-radius:999px;padding:1px 8px;margin-left:6px}
+.chatlist .last{color:var(--muted);font-size:12.5px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52vw}
+.chatlist .when{color:var(--faint);font-size:11.5px;flex:none}
+.thread{background:var(--card);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;height:70vh;max-height:640px}
+.thread .head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.thread .head .who{font-weight:700}
+.thread .head .ctx{color:var(--faint);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:78%;padding:7px 11px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.msg.mine{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg.theirs{align-self:flex-start;background:var(--paper);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg .t{display:block;font-size:10.5px;opacity:.7;margin-top:2px}
+.sendrow{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.sendrow input{flex:1;border:1px solid var(--line2);border-radius:999px;padding:9px 14px;background:#fff}
 
 .overlay{position:fixed;inset:0;background:rgba(34,36,42,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto;z-index:50}
 .overlay.open{display:flex}
@@ -126,10 +145,6 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:10p
 .gate .sub{color:var(--muted);font-size:13.5px;margin-bottom:18px}
 .gate .switch{margin-top:14px;font-size:13.5px;color:var(--muted);text-align:center}
 .gate .switch button{border:none;background:none;color:var(--accent);font-weight:700;font-size:13.5px}
-.setup{max-width:640px;margin:6vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;font-size:14px}
-.setup h1{font-family:var(--display);font-size:24px;color:var(--accent-dark);margin-bottom:10px}
-.setup ol{padding-left:20px;display:grid;gap:8px;margin:12px 0}
-.setup code{background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px}
 footer{margin-top:44px;color:var(--faint);font-size:12.5px;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -140,7 +155,6 @@ footer{margin-top:44px;color:var(--faint);font-size:12.5px;text-align:center}
 <div class="toast" id="toast" role="status"></div>
 
 <script type="module">
-/* ================= 1. PASTE YOUR FIREBASE CONFIG HERE ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyAt3O4GERYyW7kKbGjbSv-4qW-yekBvtPg",
   authDomain: "stthomas-everytime.firebaseapp.com",
@@ -150,10 +164,8 @@ const firebaseConfig = {
   appId: "1:800575907881:web:a8a06f3e382ed37bf89438",
   measurementId: "G-B29PRGMNVD"
 };
-/* ====================================================================== */
 
 const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const DAYS_KO=["월","화","수","목","금","토","일"];
 const PALETTE=[["#FFE3E3","#8F1D1D"],["#FFEBD6","#8A4B08"],["#FFF6C4","#6E5A00"],["#E3F6E3","#1E6B2E"],["#DDF4F0","#0E5F55"],["#E0EDFF","#1D4E9E"],["#EDE4FF","#5A3EA8"],["#FDE2F0","#9C2A66"],["#EFEAE3","#5C5347"],["#E6E7EC","#44444C"]];
 const uid7=()=>Math.random().toString(36).slice(2,9);
 const codeGen=()=>Array.from({length:6},()=>"ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*31)]).join("");
@@ -173,25 +185,6 @@ overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 const $=id=>document.getElementById(id);
 
-/* ---------- setup gate if config not pasted ---------- */
-if(/PASTE/.test(firebaseConfig.apiKey)){
-  app.innerHTML=`<div class="setup">
-    <h1>Almost there — connect Firebase</h1>
-    <p>This version stores accounts, schedules, and the board in a free Firebase project. One-time setup:</p>
-    <ol>
-      <li>Go to <b>console.firebase.google.com</b> → Add project (any name; Analytics off is fine).</li>
-      <li><b>Build → Authentication → Get started → Email/Password → Enable.</b></li>
-      <li>Authentication → <b>Settings → Authorized domains → Add domain</b> → add your <code>username.github.io</code>.</li>
-      <li><b>Build → Firestore Database → Create database</b> (production mode, any region).</li>
-      <li>Firestore → <b>Rules</b> tab → replace with the security rules → Publish.</li>
-      <li>Project overview → <b>⚙ Project settings → Your apps → Web (&lt;/&gt;)</b> → register the app → copy the <code>firebaseConfig</code> block.</li>
-      <li>Open this <code>index.html</code>, paste your config over the <code>PASTE_YOUR_CONFIG_HERE</code> block at the top of the script, and re-upload to GitHub.</li>
-    </ol>
-    <p style="color:var(--muted)">Redeploy, refresh this page, and the app will appear.</p>
-  </div>`;
-  throw new Error("Firebase config not set");
-}
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,getDoc,setDoc,updateDoc,onSnapshot,collection,query,where,getDocs,addDoc,deleteDoc,orderBy,limit,serverTimestamp,arrayUnion,arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -201,17 +194,18 @@ const auth=getAuth(fb);
 const db=getFirestore(fb);
 
 let me=null, myUid=null;
-let view="tt";
-let friendData={}, friendSubs={}, cmp={};
-let posts=[], openPost=null;
-let unsubMe=null, unsubBoard=null;
+let view="tt";                 // 'tt' | 'boards' | 'chats'
+let friendData={}, friendSubs={}, cmp={}, names={};
+let boards=[], activeBoard=null, posts=[], openPost=null;
+let chats=[], openChatId=null, msgs=[];
+let unsubMe=null, unsubBoards=null, unsubPosts=null, unsubChats=null, unsubMsgs=null;
 
-/* ================= AUTH SCREEN ================= */
+/* ================= AUTH ================= */
 function renderAuth(mode){
   app.innerHTML=`<div class="gate">
-    <h1>Timetable <span style="font-family:var(--sans);font-size:15px;color:var(--muted)">나의 시간표</span></h1>
-    <p class="sub">${mode==="up"?"Create your account · 회원가입":"Welcome back · 로그인"}</p>
-    ${mode==="up"?`<div class="field"><label>Name · 이름</label><input type="text" id="aName" autocomplete="name"></div>`:""}
+    <h1>Timetable</h1>
+    <p class="sub">${mode==="up"?"Create your account":"Welcome back"}</p>
+    ${mode==="up"?`<div class="field"><label>Name</label><input type="text" id="aName" autocomplete="name"></div>`:""}
     <div class="field"><label>Email</label><input type="email" id="aEmail" autocomplete="email"></div>
     <div class="field"><label>Password ${mode==="up"?"(6+ characters)":""}</label><input type="password" id="aPw" autocomplete="${mode==="up"?"new-password":"current-password"}"></div>
     <p class="err" id="aErr"></p>
@@ -223,7 +217,7 @@ function renderAuth(mode){
     const err=$("aErr");err.style.display="none";
     const em=$("aEmail").value.trim(),pw=$("aPw").value;
     if(!em||!pw){err.textContent="Enter your email and password";err.style.display="block";return}
-    if(mode==="up"&&!$("aName").value.trim()){err.textContent="Enter your name · 이름을 입력하세요";err.style.display="block";return}
+    if(mode==="up"&&!$("aName").value.trim()){err.textContent="Enter your name";err.style.display="block";return}
     try{
       if(mode==="up"){
         const cred=await createUserWithEmailAndPassword(auth,em,pw);
@@ -242,11 +236,11 @@ function renderAuth(mode){
   };
 }
 
-/* ================= MAIN SHELL ================= */
+/* ================= SHELL ================= */
 function shell(){
   app.innerHTML=`<div class="wrap">
     <header class="top">
-      <div class="wordmark">Timetable<span class="ko">나의 시간표</span></div>
+      <div class="wordmark">Timetable</div>
       <div class="me">
         <span id="myName"></span>
         <button class="chip" id="myCode" title="Tap to copy">code ${esc(me.friendCode)}</button>
@@ -254,21 +248,25 @@ function shell(){
       </div>
     </header>
     <nav class="nav">
-      <button id="navTT" aria-current="${view==="tt"}">시간표 Timetable</button>
-      <button id="navBd" aria-current="${view==="board"}">게시판 Board</button>
+      <button id="navTT" aria-current="${view==="tt"}">Timetable</button>
+      <button id="navBd" aria-current="${view==="boards"}">Boards</button>
+      <button id="navCh" aria-current="${view==="chats"}">Chats</button>
     </nav>
     <div id="viewMount"></div>
-    <footer>synced live · board posts show as 익명 to everyone</footer>
+    <footer>synced live · board posts and board chats are anonymous to other users</footer>
   </div>`;
   $("myName").textContent=me.name;
-  $("myCode").onclick=()=>navigator.clipboard.writeText(me.friendCode).then(()=>toast("Friend code copied · 복사됨"));
+  $("myCode").onclick=()=>navigator.clipboard.writeText(me.friendCode).then(()=>toast("Friend code copied"));
   $("btnOut").onclick=()=>signOut(auth);
-  $("navTT").onclick=()=>{view="tt";shell()};
-  $("navBd").onclick=()=>{view="board";shell()};
-  if(view==="tt")renderTT();else renderBoard();
+  $("navTT").onclick=()=>{view="tt";openChatId=null;shell()};
+  $("navBd").onclick=()=>{view="boards";openChatId=null;shell()};
+  $("navCh").onclick=()=>{view="chats";shell()};
+  if(view==="tt")renderTT();
+  else if(view==="boards")renderBoards();
+  else renderChats();
 }
 
-/* ================= TIMETABLE VIEW ================= */
+/* ================= TIMETABLE ================= */
 const tt=()=>me.timetables[me.active]||me.timetables[0];
 async function saveMe(){await setDoc(doc(db,"users",myUid),{...me,updatedAt:serverTimestamp()})}
 
@@ -285,17 +283,17 @@ function renderTT(){
         </div>
       </div>
       <div id="grid"></div>
-      <p class="tap-hint">Tap an empty slot to add a class right there · 빈 칸을 누르면 바로 추가돼요</p>
+      <p class="tap-hint">Tap an empty slot to add a class right there</p>
     </div>
     <section class="section">
-      <h2>Friends · 친구</h2>
-      <p class="hint">Ask a friend for their 6-letter code and add them here. Check "compare", then find your shared free time — 공강 찾기.</p>
+      <h2>Friends</h2>
+      <p class="hint">Ask a friend for their 6-letter code and add them here. Check "compare", then find your shared free time.</p>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <input type="text" id="frCode" placeholder="Friend code e.g. K3XWQP" style="border:1px solid var(--line2);border-radius:8px;padding:7px 11px;text-transform:uppercase;width:200px">
         <button class="btn primary" id="frAdd">Add friend</button>
       </div>
       <div class="friends" id="friendList"></div>
-      <div style="margin-top:12px"><button class="btn primary" id="btnGaps">Find common free time · 공강 찾기</button></div>
+      <div style="margin-top:12px"><button class="btn primary" id="btnGaps">Find common free time</button></div>
       <div class="gaps" id="gapsBox" style="display:none"></div>
     </section>`;
   renderTabs();renderMyGrid();renderFriends();
@@ -315,7 +313,7 @@ function renderTabs(){
     b.setAttribute("aria-current",i===me.active);
     b.onclick=()=>{me.active=i;saveMe()};el.appendChild(b)});
   const add=document.createElement("button");add.className="tab add";add.textContent="+ New";
-  add.onclick=()=>{const n=prompt("Name for the new timetable · 새 시간표 이름","Study plan");if(!n)return;
+  add.onclick=()=>{const n=prompt("Name for the new timetable","Study plan");if(!n)return;
     me.timetables.push({id:uid7(),name:n,classes:[]});me.active=me.timetables.length-1;saveMe()};
   el.appendChild(add);
 }
@@ -328,8 +326,7 @@ function renderGrid(classes,mount,mine){
   minM=Math.floor(minM/60)*60;maxM=Math.ceil(maxM/60)*60;
   const px=1.05,H=(maxM-minM)*px;
   const g=document.createElement("div");g.className="tt";g.style.setProperty("--ncols",ncols);
-  g.innerHTML="<div class='corner'></div>"+Array.from({length:ncols},(_,i)=>
-    `<div class='dayhead'>${DAYS[i]} <span style="color:var(--faint);font-weight:400">${DAYS_KO[i]}</span></div>`).join("");
+  g.innerHTML="<div class='corner'></div>"+Array.from({length:ncols},(_,i)=>`<div class='dayhead'>${DAYS[i]}</div>`).join("");
   const gut=document.createElement("div");gut.className="gutter";gut.style.height=H+"px";
   for(let m2=minM;m2<=maxM;m2+=60){const lab=document.createElement("span");lab.className="hourlabel";lab.style.top=((m2-minM)*px)+"px";lab.textContent=(m2/60)%12||12;gut.appendChild(lab)}
   g.appendChild(gut);
@@ -369,10 +366,9 @@ function renderMyGrid(){
   renderGrid(t.classes,$("grid"),true);
 }
 
-/* ---------- class modal (add / edit) ---------- */
 function sessRow(s){
   return `<div class="sess">
-    <select class="sd">${DAYS.map((d,i)=>`<option value="${i}" ${s.d===i?"selected":""}>${d} ${DAYS_KO[i]}</option>`).join("")}</select>
+    <select class="sd">${DAYS.map((d,i)=>`<option value="${i}" ${s.d===i?"selected":""}>${d}</option>`).join("")}</select>
     <input type="time" class="ss" value="${s.s}"> – <input type="time" class="se" value="${s.e}">
     <button type="button" class="x" aria-label="Remove session">✕</button>
   </div>`;
@@ -382,13 +378,13 @@ function openClassModal(cls,prefill){
   const c=cls||{id:uid7(),title:"",room:"",memo:"",color:Math.floor(Math.random()*PALETTE.length),
     sessions:[prefill||{d:0,s:"09:00",e:"10:15"}]};
   openModal(`
-    <h3>${isNew?"Add · 수업 추가":"Edit · 수업 수정"}</h3>
-    <div class="field"><label>Class name · 과목명</label><input type="text" id="fTitle"></div>
-    <div class="field"><label>Room · 강의실</label><input type="text" id="fRoom"></div>
-    <div class="field"><label>Times · 시간</label><div id="sessList"></div>
+    <h3>${isNew?"Add a class":"Edit class"}</h3>
+    <div class="field"><label>Class name</label><input type="text" id="fTitle"></div>
+    <div class="field"><label>Room</label><input type="text" id="fRoom"></div>
+    <div class="field"><label>Times</label><div id="sessList"></div>
       <button class="btn small" type="button" id="fAddSess">+ Add time</button></div>
-    <div class="field"><label>Color · 색</label><div class="swatches" id="fSw"></div></div>
-    <div class="field"><label>Memo · 메모</label><textarea id="fMemo"></textarea></div>
+    <div class="field"><label>Color</label><div class="swatches" id="fSw"></div></div>
+    <div class="field"><label>Memo</label><textarea id="fMemo"></textarea></div>
     <p class="err" id="fErr"></p>
     <div class="actions">
       ${isNew?"":'<button class="btn danger" id="fDel">Delete</button>'}
@@ -416,7 +412,7 @@ function openClassModal(cls,prefill){
   if(!isNew)$("fDel").onclick=()=>{if(confirm("Delete this class?")){tt().classes=tt().classes.filter(x=>x.id!==c.id);saveMe();closeModal()}};
   $("fSave").onclick=()=>{
     const title=$("fTitle").value.trim(),err=$("fErr");
-    if(!title){err.textContent="Enter a class name first · 과목명을 입력하세요";err.style.display="block";return}
+    if(!title){err.textContent="Enter a class name first";err.style.display="block";return}
     if(!sessions.length){err.textContent="Add at least one meeting time";err.style.display="block";return}
     for(const s of sessions){if(!s.s||!s.e||toMin(s.e)<=toMin(s.s)){err.textContent="Each time slot needs a start before its end";err.style.display="block";return}}
     Object.assign(c,{title,room:$("fRoom").value.trim(),memo:$("fMemo").value.trim(),color,sessions});
@@ -436,7 +432,7 @@ async function addFriend(){
     const fUid=snap.docs[0].id;
     if((me.friends||[]).includes(fUid)){toast("Already added");return}
     await updateDoc(doc(db,"users",myUid),{friends:arrayUnion(fUid)});
-    $("frCode").value="";toast("Friend added · 추가됨");
+    $("frCode").value="";toast("Friend added");
   }catch(e){toast("Couldn't add — check your connection")}
 }
 function syncFriendSubs(){
@@ -446,7 +442,7 @@ function syncFriendSubs(){
     if(friendSubs[u])return;
     if(cmp[u]===undefined)cmp[u]=true;
     friendSubs[u]=onSnapshot(doc(db,"users",u),s=>{
-      if(s.exists())friendData[u]=s.data();else delete friendData[u];
+      if(s.exists()){friendData[u]=s.data();names[u]=s.data().name}else delete friendData[u];
       if(view==="tt")renderFriends();
     });
   });
@@ -455,7 +451,7 @@ const classesOf=u=>{const d=friendData[u];if(!d)return[];const t=(d.timetables||
 function renderFriends(){
   const el=$("friendList");if(!el)return;el.innerHTML="";
   const fr=me.friends||[];
-  if(!fr.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1">No friends yet — trade codes! Yours is <b>${esc(me.friendCode)}</b>.<br>아직 친구가 없어요 — 코드를 주고받아 보세요!</div>`;return}
+  if(!fr.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1">No friends yet — trade codes! Yours is <b>${esc(me.friendCode)}</b>.</div>`;return}
   fr.forEach(u=>{
     const d=friendData[u];
     const card=document.createElement("div");card.className="friend";
@@ -463,13 +459,15 @@ function renderFriends(){
       <div class="meta">${d?classesOf(u).length+" classes · live":"…"}</div>
       <div class="row">
         <button class="btn small" data-a="view" ${d?"":"disabled"}>View</button>
+        <button class="btn small" data-a="chat" ${d?"":"disabled"}>Chat</button>
         <button class="btn small danger" data-a="del">Remove</button>
         <label><input type="checkbox" ${cmp[u]?"checked":""}> compare</label>
       </div>`;
     card.querySelector("[data-a=view]").onclick=()=>{if(!d)return;
       openModal(`<h3></h3><div id="fGrid" style="overflow-x:auto"></div><div class="actions"><button class="btn" id="fvC">Close</button></div>`);
-      modalBody.querySelector("h3").textContent=d.name+" · 친구 시간표";
+      modalBody.querySelector("h3").textContent=d.name+"'s timetable";
       renderGrid(classesOf(u),$("fGrid"),false);$("fvC").onclick=closeModal};
+    card.querySelector("[data-a=chat]").onclick=()=>startFriendChat(u);
     card.querySelector("[data-a=del]").onclick=async()=>{if(confirm("Remove this friend?")){await updateDoc(doc(db,"users",myUid),{friends:arrayRemove(u)})}};
     card.querySelector("input").onchange=e=>{cmp[u]=e.target.checked};
     el.appendChild(card);
@@ -493,65 +491,219 @@ function showGaps(){
   box.innerHTML=html;box.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 
-/* ================= BOARD VIEW ================= */
-function renderBoard(){
+/* ================= BOARDS ================= */
+async function ensureDefaultBoards(){
+  try{
+    const snap=await getDocs(query(collection(db,"boards"),limit(1)));
+    if(!snap.empty)return;
+    const defs=[["free","Free Board","Anything goes"],["questions","Class Questions","Cold calls, outlines, exam prep"],["market","Flea Market","Buy and sell — casebooks, furniture, anything"],["jobs","Work Opportunities","Clerkships, RA positions, part-time work"]];
+    for(const[id,name,desc]of defs){
+      try{await setDoc(doc(db,"boards",id),{name,desc,uid:myUid,createdAt:serverTimestamp()})}catch(e){}
+    }
+  }catch(e){}
+}
+function renderBoards(){
   $("viewMount").innerHTML=`
-    <section>
-      <h2 style="font-family:var(--display);font-size:20px;margin-bottom:4px">Anonymous board · 익명 게시판</h2>
-      <p style="color:var(--muted);font-size:13.5px;margin-bottom:14px">Ask anything — outlines, cold calls, where to nap. Every post and comment shows as 익명.</p>
-      <div class="board-compose">
-        <textarea id="bTxt" maxlength="2000" placeholder="질문이나 하고 싶은 말을 적어보세요… (posted as 익명)"></textarea>
-        <div class="row"><span class="anon">posting as <b>익명</b> — your name is never shown</span>
-        <button class="btn primary" id="bPost">Post</button></div>
-        <p class="err" id="bErr"></p>
-      </div>
-      <div id="postList"></div>
-    </section>`;
+    <div class="boardbar" id="boardBar"></div>
+    <p class="board-desc" id="boardDesc"></p>
+    <div class="board-compose">
+      <textarea id="bTxt" maxlength="2000" placeholder="Write a post… (shown as Anonymous)"></textarea>
+      <div class="row"><span class="anon">posting as <b>Anonymous</b> — your name is never shown</span>
+      <button class="btn primary" id="bPost">Post</button></div>
+      <p class="err" id="bErr"></p>
+    </div>
+    <div id="postList"></div>`;
+  drawBoardBar();
   $("bPost").onclick=async()=>{
     const t=$("bTxt").value.trim(),err=$("bErr");
-    if(!t){err.textContent="Write something first · 내용을 입력하세요";err.style.display="block";return}
+    if(!activeBoard){err.textContent="Pick a board first";err.style.display="block";return}
+    if(!t){err.textContent="Write something first";err.style.display="block";return}
     err.style.display="none";$("bTxt").value="";
-    try{await addDoc(collection(db,"board"),{uid:myUid,text:t,createdAt:serverTimestamp(),comments:[]})}
+    try{await addDoc(collection(db,"posts"),{uid:myUid,board:activeBoard,text:t,createdAt:serverTimestamp(),comments:[]})}
     catch(e){err.textContent="Couldn't post — check your connection";err.style.display="block"}
   };
   drawPosts();
 }
+function drawBoardBar(){
+  const bar=$("boardBar");if(!bar)return;bar.innerHTML="";
+  boards.forEach(b=>{
+    const btn=document.createElement("button");btn.className="tab";btn.textContent=b.name;
+    btn.setAttribute("aria-current",b.id===activeBoard);
+    btn.onclick=()=>{activeBoard=b.id;subscribePosts();drawBoardBar()};
+    bar.appendChild(btn);
+  });
+  const add=document.createElement("button");add.className="tab add";add.textContent="+ New board";
+  add.onclick=openBoardModal;bar.appendChild(add);
+  const d=$("boardDesc");
+  const cur=boards.find(b=>b.id===activeBoard);
+  if(d)d.textContent=cur?(cur.desc||""):"";
+}
+function openBoardModal(){
+  openModal(`
+    <h3>Create a board</h3>
+    <div class="field"><label>Board name</label><input type="text" id="nbName" maxlength="40" placeholder="e.g. Study Groups"></div>
+    <div class="field"><label>Description (optional)</label><input type="text" id="nbDesc" maxlength="80" placeholder="What is this board for?"></div>
+    <p class="err" id="nbErr"></p>
+    <div class="actions"><button class="btn" id="nbCancel">Cancel</button><button class="btn primary" id="nbGo">Create</button></div>`);
+  $("nbCancel").onclick=closeModal;
+  $("nbGo").onclick=async()=>{
+    const name=$("nbName").value.trim(),err=$("nbErr");
+    if(!name){err.textContent="Give the board a name";err.style.display="block";return}
+    if(boards.some(b=>b.name.toLowerCase()===name.toLowerCase())){err.textContent="A board with that name already exists";err.style.display="block";return}
+    try{
+      const ref=await addDoc(collection(db,"boards"),{name,desc:$("nbDesc").value.trim(),uid:myUid,createdAt:serverTimestamp()});
+      activeBoard=ref.id;closeModal();toast("Board created");
+    }catch(e){err.textContent="Couldn't create — check your connection";err.style.display="block"}
+  };
+}
+function subscribePosts(){
+  if(unsubPosts){unsubPosts();unsubPosts=null}
+  posts=[];openPost=null;drawPosts();
+  if(!activeBoard)return;
+  unsubPosts=onSnapshot(query(collection(db,"posts"),where("board","==",activeBoard),limit(150)),s=>{
+    posts=s.docs.map(x=>({id:x.id,...x.data()}));
+    posts.sort((a,b)=>((b.createdAt&&b.createdAt.toMillis)?b.createdAt.toMillis():Date.now())-((a.createdAt&&a.createdAt.toMillis)?a.createdAt.toMillis():Date.now()));
+    if(view==="boards")drawPosts();
+  });
+}
 function drawPosts(){
   const el=$("postList");if(!el)return;el.innerHTML="";
-  if(!posts.length){el.innerHTML=`<div class="empty" style="margin-top:12px">No posts yet — be the first to ask something · 첫 글을 남겨보세요</div>`;return}
+  if(!activeBoard){el.innerHTML=`<div class="empty" style="margin-top:12px">Pick a board above, or create your own.</div>`;return}
+  if(!posts.length){el.innerHTML=`<div class="empty" style="margin-top:12px">No posts here yet — start the conversation.</div>`;return}
   posts.forEach(p=>{
     const d=document.createElement("div");d.className="post";
     const ts=p.createdAt&&p.createdAt.toMillis?p.createdAt.toMillis():null;
     const cmts=p.comments||[];
-    d.innerHTML=`<div class="meta"><b>익명</b><span>${rel(ts)}</span></div>
+    d.innerHTML=`<div class="meta"><b>Anonymous</b><span>${rel(ts)}</span></div>
       <div class="txt">${esc(p.text)}</div>
       <div class="foot">
-        <button data-a="cm">댓글 ${cmts.length}</button>
+        <button data-a="cm">${cmts.length} comment${cmts.length===1?"":"s"}</button>
+        ${p.uid!==myUid?'<button data-a="msg">Message author</button>':""}
         ${p.uid===myUid?'<button data-a="del">Delete</button>':""}
       </div>
       <div class="cmts" style="display:${openPost===p.id?"block":"none"}">
-        ${cmts.map(c=>`<div class="cmt"><span class="who">익명</span>${esc(c.text)}<span class="when">${rel(c.at)}</span></div>`).join("")}
-        <div class="cmt-row"><input type="text" placeholder="댓글 달기 · add a comment" maxlength="500"><button class="btn small primary">Reply</button></div>
+        ${cmts.map(c=>`<div class="cmt"><span class="who">Anonymous</span>${esc(c.text)}<span class="when">${rel(c.at)}</span></div>`).join("")}
+        <div class="cmt-row"><input type="text" placeholder="Add a comment (anonymous)" maxlength="500"><button class="btn small primary">Reply</button></div>
       </div>`;
     d.querySelector("[data-a=cm]").onclick=()=>{openPost=openPost===p.id?null:p.id;drawPosts()};
+    const msg=d.querySelector("[data-a=msg]");
+    if(msg)msg.onclick=()=>startAnonChat(p);
     const del=d.querySelector("[data-a=del]");
-    if(del)del.onclick=async()=>{if(confirm("Delete this post?"))await deleteDoc(doc(db,"board",p.id))};
+    if(del)del.onclick=async()=>{if(confirm("Delete this post?"))await deleteDoc(doc(db,"posts",p.id))};
     const row=d.querySelector(".cmt-row");
     row.querySelector("button").onclick=async()=>{
       const inp=row.querySelector("input"),t=inp.value.trim();
       if(!t){inp.focus();return}
       inp.value="";
-      await updateDoc(doc(db,"board",p.id),{comments:arrayUnion({text:t,at:Date.now()})});
+      await updateDoc(doc(db,"posts",p.id),{comments:arrayUnion({text:t,at:Date.now()})});
     };
     el.appendChild(d);
   });
 }
 
+/* ================= CHATS ================= */
+async function startFriendChat(u){
+  const id=[myUid,u].sort().join("_");
+  try{
+    await setDoc(doc(db,"chats",id),{members:[myUid,u],anon:false,lastAt:Date.now()},{merge:true});
+    openChatId=id;view="chats";shell();
+  }catch(e){toast("Couldn't open chat")}
+}
+async function startAnonChat(post){
+  if(post.uid===myUid)return;
+  const id="anon_"+post.id+"_"+myUid;
+  try{
+    await setDoc(doc(db,"chats",id),{members:[post.uid,myUid],anon:true,starter:myUid,
+      postExcerpt:post.text.slice(0,60),lastAt:Date.now()},{merge:true});
+    openChatId=id;view="chats";shell();
+  }catch(e){toast("Couldn't open chat")}
+}
+function chatLabel(c){
+  if(c.anon){
+    const role=c.starter===myUid?"Post author":"Anonymous";
+    return {who:role,tag:"anonymous",ctx:c.postExcerpt?('re: "'+c.postExcerpt+'"'):""};
+  }
+  const other=(c.members||[]).find(u=>u!==myUid);
+  return {who:names[other]||"…",tag:"",ctx:""};
+}
+async function resolveNames(){
+  const need=new Set();
+  chats.forEach(c=>{if(!c.anon){const o=(c.members||[]).find(u=>u!==myUid);if(o&&!names[o])need.add(o)}});
+  for(const u of need){
+    try{const s=await getDoc(doc(db,"users",u));if(s.exists())names[u]=s.data().name}catch(e){}
+  }
+  if(need.size&&view==="chats"&&!openChatId)drawChatList();
+}
+function renderChats(){
+  if(openChatId){renderThread();return}
+  $("viewMount").innerHTML=`
+    <h2 style="font-family:var(--display);font-size:20px;margin-bottom:4px">Chats</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:10px">Message friends from their card on the Timetable tab, or message a post's author from any board. Board chats stay anonymous both ways.</p>
+    <div class="chatlist" id="chatList"></div>`;
+  drawChatList();
+}
+function drawChatList(){
+  const el=$("chatList");if(!el)return;el.innerHTML="";
+  if(!chats.length){el.innerHTML=`<div class="empty">No chats yet. Say hi to a friend, or tap "Message author" on a board post.</div>`;return}
+  chats.forEach(c=>{
+    const l=chatLabel(c);
+    const item=document.createElement("div");item.className="item";item.setAttribute("role","button");item.tabIndex=0;
+    item.innerHTML=`<div style="min-width:0"><div class="who">${esc(l.who)}${l.tag?`<span class="tag">${l.tag}</span>`:""}</div>
+      <div class="last">${esc(c.lastMsg||l.ctx||"New chat")}</div></div>
+      <div class="when">${rel(c.lastAt)}</div>`;
+    const open=()=>{openChatId=c.id;renderThread()};
+    item.onclick=open;item.onkeydown=e=>{if(e.key==="Enter")open()};
+    el.appendChild(item);
+  });
+}
+function renderThread(){
+  const c=chats.find(x=>x.id===openChatId);
+  if(!c){openChatId=null;renderChats();return}
+  const l=chatLabel(c);
+  $("viewMount").innerHTML=`
+    <div class="thread">
+      <div class="head">
+        <button class="btn small" id="chBack">← Back</button>
+        <div style="min-width:0"><div class="who">${esc(l.who)}${l.tag?` <span class="tag" style="font-size:11px;color:var(--accent-dark);background:var(--accent-soft);border-radius:999px;padding:1px 8px">${l.tag}</span>`:""}</div>
+        ${l.ctx?`<div class="ctx">${esc(l.ctx)}</div>`:""}</div>
+      </div>
+      <div class="msgs" id="msgs"></div>
+      <div class="sendrow"><input type="text" id="msgIn" maxlength="1000" placeholder="Type a message…"><button class="btn primary" id="msgGo">Send</button></div>
+    </div>`;
+  $("chBack").onclick=()=>{openChatId=null;if(unsubMsgs){unsubMsgs();unsubMsgs=null}renderChats()};
+  const send=async()=>{
+    const inp=$("msgIn"),t=inp.value.trim();
+    if(!t)return;inp.value="";inp.focus();
+    try{
+      await addDoc(collection(db,"chats",c.id,"messages"),{uid:myUid,text:t,at:Date.now()});
+      await updateDoc(doc(db,"chats",c.id),{lastMsg:t.slice(0,60),lastAt:Date.now()});
+    }catch(e){toast("Couldn't send — check your connection")}
+  };
+  $("msgGo").onclick=send;
+  $("msgIn").addEventListener("keydown",e=>{if(e.key==="Enter")send()});
+  if(unsubMsgs)unsubMsgs();
+  unsubMsgs=onSnapshot(query(collection(db,"chats",c.id,"messages"),orderBy("at"),limit(300)),s=>{
+    msgs=s.docs.map(x=>x.data());
+    drawMsgs(c);
+  });
+}
+function drawMsgs(c){
+  const el=$("msgs");if(!el)return;el.innerHTML="";
+  msgs.forEach(m=>{
+    const d=document.createElement("div");
+    d.className="msg "+(m.uid===myUid?"mine":"theirs");
+    d.innerHTML=`${esc(m.text)}<span class="t">${rel(m.at)}</span>`;
+    el.appendChild(d);
+  });
+  el.scrollTop=el.scrollHeight;
+}
+
 /* ================= WIRING ================= */
 onAuthStateChanged(auth,async user=>{
-  if(unsubMe){unsubMe();unsubMe=null}
-  if(unsubBoard){unsubBoard();unsubBoard=null}
+  [unsubMe,unsubBoards,unsubPosts,unsubChats,unsubMsgs].forEach(u=>{if(u)u()});
+  unsubMe=unsubBoards=unsubPosts=unsubChats=unsubMsgs=null;
   Object.values(friendSubs).forEach(f=>f());friendSubs={};friendData={};
+  chats=[];posts=[];boards=[];openChatId=null;activeBoard=null;
   if(!user){me=null;myUid=null;renderAuth("in");return}
   myUid=user.uid;
   const ref=doc(db,"users",myUid);
@@ -560,6 +712,7 @@ onAuthStateChanged(auth,async user=>{
     await setDoc(ref,{name:"Student",friendCode:codeGen(),friends:[],active:0,
       timetables:[{id:uid7(),name:"My timetable",classes:[]}],updatedAt:serverTimestamp()});
   }
+  await ensureDefaultBoards();
   unsubMe=onSnapshot(ref,s=>{
     if(!s.exists())return;
     me=s.data();
@@ -567,9 +720,17 @@ onAuthStateChanged(auth,async user=>{
     else if(view==="tt"){renderTabs();renderMyGrid();renderFriends()}
     syncFriendSubs();
   });
-  unsubBoard=onSnapshot(query(collection(db,"board"),orderBy("createdAt","desc"),limit(50)),s=>{
-    posts=s.docs.map(x=>({id:x.id,...x.data()}));
-    if(view==="board")drawPosts();
+  unsubBoards=onSnapshot(collection(db,"boards"),s=>{
+    boards=s.docs.map(x=>({id:x.id,...x.data()}));
+    boards.sort((a,b)=>((a.createdAt&&a.createdAt.toMillis)?a.createdAt.toMillis():0)-((b.createdAt&&b.createdAt.toMillis)?b.createdAt.toMillis():0));
+    if(!activeBoard&&boards.length){activeBoard=boards[0].id;subscribePosts()}
+    if(view==="boards")drawBoardBar();
+  });
+  unsubChats=onSnapshot(query(collection(db,"chats"),where("members","array-contains",myUid)),s=>{
+    chats=s.docs.map(x=>({id:x.id,...x.data()}));
+    chats.sort((a,b)=>(b.lastAt||0)-(a.lastAt||0));
+    resolveNames();
+    if(view==="chats"){if(openChatId)renderThread._skip=true;else drawChatList()}
   });
 });
 </script>
