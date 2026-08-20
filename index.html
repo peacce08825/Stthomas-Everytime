@@ -14,9 +14,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#FAF8F4; --card:#FFFFFF; --ink:#22242A; --muted:#6B6E78; --faint:#9CA0AA;
-  --line:#E7E3DB; --line2:#D8D3C8;
-  --accent:#8E2B3C; --accent-dark:#6E1F2E; --accent-soft:#F6E7EA;
+  --hue:262;
+  --paper:hsl(var(--hue) 30% 97.5%); --card:#FFFFFF; --ink:#22242A; --muted:#6B6E78; --faint:#9CA0AA;
+  --line:hsl(var(--hue) 16% 89%); --line2:hsl(var(--hue) 13% 80%);
+  --accent:hsl(var(--hue) 52% 47%); --accent-dark:hsl(var(--hue) 54% 36%); --accent-soft:hsl(var(--hue) 55% 94%);
   --ok:#1E6B2E; --ok-soft:#E3F6E3;
   --radius:10px;
   --sans:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
@@ -148,6 +149,10 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:10p
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:999px;padding:8px 18px;font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:60}
 .toast.show{opacity:1}
 
+.huebar{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:999px;border:none;margin:6px 0 2px;background:linear-gradient(to right,hsl(0 70% 55%),hsl(60 70% 50%),hsl(120 55% 42%),hsl(180 55% 42%),hsl(240 60% 55%),hsl(300 60% 52%),hsl(360 70% 55%))}
+.huebar::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 1px var(--line2);cursor:pointer}
+.huebar::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 1px var(--line2);cursor:pointer}
+
 .gate{max-width:480px;margin:8vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
 .gate h1{font-family:var(--display);font-size:26px;color:var(--accent-dark);margin-bottom:2px}
 .gate .sub{color:var(--muted);font-size:13.5px;margin-bottom:18px}
@@ -205,6 +210,30 @@ function closeModal(){overlay.classList.remove("open")}
 overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 const $=id=>document.getElementById(id);
+
+/* ---------- theme (hue) ---------- */
+const DEFAULT_HUE=262;
+const storedHue=parseInt(localStorage.getItem("tt-hue"),10);
+let hue=Number.isFinite(storedHue)?storedHue:DEFAULT_HUE;
+function applyHue(h){document.documentElement.style.setProperty("--hue",h)}
+applyHue(hue);
+function openThemeModal(){
+  openModal(`
+    <h3>Theme color</h3>
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:10px">Slide to pick your color — it applies instantly and follows you on any device.</p>
+    <input type="range" class="huebar" id="hueIn" min="0" max="360" value="${hue}" aria-label="Theme color">
+    <div class="actions">
+      <button class="btn" id="thReset">Reset to purple</button>
+      <button class="btn primary" id="thDone">Done</button>
+    </div>`);
+  $("hueIn").oninput=e=>{hue=+e.target.value;applyHue(hue)};
+  $("thReset").onclick=()=>{hue=DEFAULT_HUE;applyHue(hue);$("hueIn").value=hue};
+  $("thDone").onclick=async()=>{
+    localStorage.setItem("tt-hue",hue);
+    try{await updateDoc(doc(db,"users",myUid),{hue})}catch(e){}
+    closeModal();
+  };
+}
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -266,7 +295,8 @@ function shell(){
       <div class="me">
         <span id="myName"></span>
         <button class="chip" id="myCode" title="Tap to copy">code ${esc(me.friendCode)}</button>
-        ${myUid===ADMIN_UID?'<span class="chip" style="background:#EDE4FF;color:#4B3FC4">manager</span>':""}
+        ${myUid===ADMIN_UID?'<span class="chip">manager</span>':""}
+        <button class="btn small" id="btnTheme" title="Theme color">🎨</button>
         <button class="btn small" id="btnOut">Sign out</button>
       </div>
     </header>
@@ -280,6 +310,7 @@ function shell(){
   </div>`;
   $("myName").textContent=me.name;
   $("myCode").onclick=()=>navigator.clipboard.writeText(me.friendCode).then(()=>toast("Friend code copied"));
+  $("btnTheme").onclick=openThemeModal;
   $("btnOut").onclick=()=>signOut(auth);
   $("navTT").onclick=()=>{view="tt";openChatId=null;shell()};
   $("navBd").onclick=()=>{view="boards";openChatId=null;shell()};
@@ -765,6 +796,7 @@ onAuthStateChanged(auth,async user=>{
   unsubMe=onSnapshot(ref,s=>{
     if(!s.exists())return;
     me=s.data();
+    if(typeof me.hue==="number"&&me.hue!==hue){hue=me.hue;applyHue(hue);localStorage.setItem("tt-hue",hue)}
     if(!document.querySelector(".nav"))shell();
     else if(view==="tt"){renderTabs();renderMyGrid();renderFriends()}
     syncFriendSubs();
