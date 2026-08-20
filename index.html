@@ -8,7 +8,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Timetable">
-<link rel="apple-touch-icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png?v=2">
+<link rel="apple-touch-icon" sizes="152x152" href="icon.png?v=2">
+<link rel="apple-touch-icon" sizes="167x167" href="icon.png?v=2">
 <link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -168,6 +171,12 @@ footer{margin-top:44px;color:var(--faint);font-size:12.5px;text-align:center}
   .blk b{font-size:9.5px}
   .chatlist .last{max-width:46vw}
   .thread{height:76vh}
+  .grid-head{flex-direction:column;align-items:stretch;gap:8px}
+  .grid-title{font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .grid-title .sub{margin-left:6px}
+  .grid-head>div{justify-content:flex-start}
+  .grid-head .btn{white-space:nowrap;flex:none}
+  .tabs .tab{max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 </style>
 </head>
@@ -236,7 +245,7 @@ function openThemeModal(){
 }
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,setPersistence,browserLocalPersistence,browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,getDoc,setDoc,updateDoc,onSnapshot,collection,query,where,getDocs,addDoc,deleteDoc,orderBy,limit,serverTimestamp,arrayUnion,arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const fb=initializeApp(firebaseConfig);
@@ -260,6 +269,9 @@ function renderAuth(mode){
     <div class="field"><label>Email</label><input type="email" id="aEmail" autocomplete="email"></div>
     <div class="field"><label>Password ${mode==="up"?"(6+ characters)":""}</label><input type="password" id="aPw" autocomplete="${mode==="up"?"new-password":"current-password"}"></div>
     <p class="err" id="aErr"></p>
+    <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--muted);margin-bottom:12px">
+      <input type="checkbox" id="aKeep" ${localStorage.getItem("tt-keep")==="0"?"":"checked"}> Keep me signed in
+    </label>
     <button class="btn primary" id="aGo" style="width:100%;padding:10px">${mode==="up"?"Sign up":"Sign in"}</button>
     <p class="switch">${mode==="up"?"Already have an account?":"New here?"} <button id="aSwitch">${mode==="up"?"Sign in":"Create one"}</button></p>
   </div>`;
@@ -270,6 +282,9 @@ function renderAuth(mode){
     if(!em||!pw){err.textContent="Enter your email and password";err.style.display="block";return}
     if(mode==="up"&&!$("aName").value.trim()){err.textContent="Enter your name";err.style.display="block";return}
     try{
+      const keep=$("aKeep").checked;
+      localStorage.setItem("tt-keep",keep?"1":"0");
+      await setPersistence(auth,keep?browserLocalPersistence:browserSessionPersistence);
       if(mode==="up"){
         const cred=await createUserWithEmailAndPassword(auth,em,pw);
         let tts=[{id:uid7(),name:"My timetable",classes:[]}];
