@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timetable</title>
+<meta name="theme-color" content="#6C5CE7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Timetable">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --hue:262;
+  --paper:hsl(var(--hue) 30% 97.5%); --card:#FFFFFF; --ink:#22242A; --muted:#6B6E78; --faint:#9CA0AA;
+  --line:hsl(var(--hue) 16% 89%); --line2:hsl(var(--hue) 13% 80%);
+  --accent:hsl(var(--hue) 52% 47%); --accent-dark:hsl(var(--hue) 54% 36%); --accent-soft:hsl(var(--hue) 55% 94%);
+  --ok:#1E6B2E; --ok-soft:#E3F6E3;
+  --radius:10px;
+  --sans:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --display:"Fraunces","IBM Plex Sans KR",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+button{font-family:var(--sans);cursor:pointer}
+input,select,textarea{font-family:var(--sans);font-size:14px;color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 64px}
+
+header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 0 6px;flex-wrap:wrap}
+.wordmark{font-family:var(--display);font-size:24px;color:var(--accent-dark)}
+.me{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.chip{background:var(--accent-soft);color:var(--accent-dark);border:none;border-radius:999px;padding:3px 11px;font-weight:700;font-size:12.5px}
+
+.btn{border:1px solid var(--line2);background:var(--card);color:var(--ink);border-radius:var(--radius);padding:7px 13px;font-size:13.5px;font-weight:500;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-dark)}
+.btn.danger{color:var(--accent);border-color:var(--accent-soft);background:var(--accent-soft)}
+.btn.small{padding:4px 9px;font-size:12.5px;border-radius:8px}
+
+.nav{display:flex;gap:6px;margin:12px 0 16px;border-bottom:1px solid var(--line)}
+.nav button{border:none;background:none;padding:8px 14px;font-size:14.5px;font-weight:700;color:var(--faint);border-bottom:2px solid transparent}
+.nav button[aria-current="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+.tabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+.tab{border:1px solid var(--line2);background:var(--card);border-radius:999px;padding:5px 14px;font-size:13.5px;font-weight:500;color:var(--muted)}
+.tab[aria-current="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.tab.add{color:var(--accent);border-style:dashed}
+
+.grid-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 14px 10px;overflow-x:auto}
+.grid-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;min-width:560px}
+.grid-title{font-weight:700;font-size:15px}
+.grid-title .sub{color:var(--faint);font-weight:400;font-size:12.5px;margin-left:8px}
+.tap-hint{min-width:560px;color:var(--faint);font-size:12px;margin-top:8px}
+
+.tt{min-width:560px;display:grid;grid-template-columns:44px repeat(var(--ncols),1fr)}
+.tt .dayhead{text-align:center;font-size:12.5px;font-weight:700;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--line)}
+.tt .corner{border-bottom:1px solid var(--line)}
+.col{position:relative;border-left:1px solid var(--line)}
+.col.mine{cursor:cell}
+.gutter{position:relative}
+.hourline{position:absolute;left:0;right:0;border-top:1px solid var(--line);opacity:.7;pointer-events:none}
+.hourlabel{position:absolute;right:6px;transform:translateY(-55%);font-size:10.5px;color:var(--faint)}
+.blk{position:absolute;left:2px;right:2px;border-radius:7px;padding:5px 7px;overflow:hidden;font-size:11.5px;line-height:1.35;border:none;text-align:left;width:calc(100% - 4px)}
+.blk b{display:block;font-size:12px;font-weight:700}
+.blk .rm{opacity:.85}
+.blk:hover{filter:brightness(.97)}
+
+.section{margin-top:30px}
+.section h2{font-family:var(--display);font-size:20px;margin-bottom:4px}
+.section .hint{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+.friends{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.friend{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.friend .nm{font-weight:700}
+.friend .meta{color:var(--faint);font-size:12.5px;margin:2px 0 10px}
+.friend .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.friend label{font-size:12.5px;color:var(--muted);display:flex;gap:5px;align-items:center;margin-left:auto}
+.empty{border:1px dashed var(--line2);border-radius:12px;padding:22px;color:var(--muted);font-size:13.5px;text-align:center}
+
+.gaps{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px}
+.gaps h3{font-size:14px;font-weight:700;margin-bottom:8px}
+.gaps .day{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px}
+.gaps .day:first-of-type{border-top:none}
+.gaps .dname{width:36px;font-weight:700;color:var(--muted);flex:none}
+.gaps .slot{background:var(--ok-soft);color:var(--ok);border-radius:6px;padding:1px 8px;font-weight:500;font-size:12.5px;margin:1px 4px 1px 0;display:inline-block}
+.gaps .none{color:var(--faint)}
+
+.boardbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.board-compose{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.board-compose textarea{width:100%;border:1px solid var(--line2);border-radius:8px;padding:9px 11px;min-height:64px;resize:vertical;background:#fff}
+.board-compose .row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap}
+.board-compose .anon{color:var(--faint);font-size:12.5px}
+.board-desc{color:var(--muted);font-size:13px;margin:0 0 10px 2px}
+.post{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
+.post .meta{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--faint)}
+.post .meta b{color:var(--accent-dark);font-size:13px}
+.post .txt{margin:6px 0 2px;white-space:pre-wrap;word-break:break-word}
+.post .foot{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
+.post .foot button{border:none;background:none;color:var(--muted);font-size:12.5px;padding:2px 0}
+.post .foot button:hover{color:var(--accent)}
+.cmts{border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+.cmt{font-size:13.5px;padding:5px 0;border-top:1px dashed var(--line)}
+.cmt:first-child{border-top:none}
+.cmt .who{font-weight:700;color:var(--accent-dark);font-size:12.5px;margin-right:6px}
+.cmt .when{color:var(--faint);font-size:11.5px;margin-left:6px}
+.cmt .cx{border:none;background:none;color:var(--faint);font-size:12px;padding:0 2px;margin-left:8px;cursor:pointer}
+.cmt .cx:hover{color:var(--accent)}
+.cmt-row{display:flex;gap:6px;margin-top:8px}
+.cmt-row input{flex:1;border:1px solid var(--line2);border-radius:8px;padding:7px 10px;background:#fff}
+
+.chatlist .item{display:flex;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:8px;cursor:pointer;align-items:center}
+.chatlist .item:hover{border-color:var(--accent)}
+.chatlist .who{font-weight:700}
+.chatlist .who .tag{font-weight:500;font-size:11.5px;color:var(--accent-dark);background:var(--accent-soft);border-radius:999px;padding:1px 8px;margin-left:6px}
+.chatlist .last{color:var(--muted);font-size:12.5px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52vw}
+.chatlist .when{color:var(--faint);font-size:11.5px;flex:none}
+.thread{background:var(--card);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;height:70vh;max-height:640px}
+.thread .head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.thread .head .who{font-weight:700}
+.thread .head .ctx{color:var(--faint);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:78%;padding:7px 11px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.msg.mine{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg.theirs{align-self:flex-start;background:var(--paper);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg .t{display:block;font-size:10.5px;opacity:.7;margin-top:2px}
+.sendrow{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.sendrow input{flex:1;border:1px solid var(--line2);border-radius:999px;padding:9px 14px;background:#fff}
+
+.overlay{position:fixed;inset:0;background:rgba(34,36,42,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto;z-index:50}
+.overlay.open{display:flex}
+.modal{background:var(--card);border-radius:16px;padding:20px;max-width:520px;width:100%;margin:auto 0}
+.modal h3{font-family:var(--display);font-size:19px;margin-bottom:14px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.field input[type=text],.field input[type=email],.field input[type=password],.field textarea,.field select{width:100%;border:1px solid var(--line2);border-radius:8px;padding:8px 10px;background:#fff}
+.field textarea{resize:vertical;min-height:56px}
+.sess{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.sess select,.sess input{border:1px solid var(--line2);border-radius:8px;padding:6px 8px;background:#fff}
+.sess .x{border:none;background:none;color:var(--accent);font-size:16px;line-height:1;padding:4px}
+.swatches{display:flex;gap:6px;flex-wrap:wrap}
+.sw{width:26px;height:26px;border-radius:8px;border:2px solid transparent}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.err{color:var(--accent);font-size:13px;margin-top:6px;display:none}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:999px;padding:8px 18px;font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:60}
+.toast.show{opacity:1}
+
+.huebar{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:999px;border:none;margin:6px 0 2px;background:linear-gradient(to right,hsl(0 70% 55%),hsl(60 70% 50%),hsl(120 55% 42%),hsl(180 55% 42%),hsl(240 60% 55%),hsl(300 60% 52%),hsl(360 70% 55%))}
+.huebar::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 1px var(--line2);cursor:pointer}
+.huebar::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 1px var(--line2);cursor:pointer}
+
+.gate{max-width:480px;margin:8vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
+.gate h1{font-family:var(--display);font-size:26px;color:var(--accent-dark);margin-bottom:2px}
+.gate .sub{color:var(--muted);font-size:13.5px;margin-bottom:18px}
+.gate .switch{margin-top:14px;font-size:13.5px;color:var(--muted);text-align:center}
+.gate .switch button{border:none;background:none;color:var(--accent);font-weight:700;font-size:13.5px}
+footer{margin-top:44px;color:var(--faint);font-size:12.5px;text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:640px){
+  .tt{min-width:0;grid-template-columns:26px repeat(var(--ncols),1fr)}
+  .grid-head,.tap-hint{min-width:0}
+  .hourlabel{font-size:8.5px;right:2px}
+  .blk{font-size:9px;line-height:1.3;padding:3px 4px;left:1px;right:1px;width:calc(100% - 2px);border-radius:5px}
+  .blk b{font-size:9.5px}
+  .chatlist .last{max-width:46vw}
+  .thread{height:76vh}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="overlay" id="overlay" role="dialog" aria-modal="true"><div class="modal" id="modalBody"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyAt3O4GERYyW7kKbGjbSv-4qW-yekBvtPg",
+  authDomain: "stthomas-everytime.firebaseapp.com",
+  projectId: "stthomas-everytime",
+  storageBucket: "stthomas-everytime.firebasestorage.app",
+  messagingSenderId: "800575907881",
+  appId: "1:800575907881:web:a8a06f3e382ed37bf89438",
+  measurementId: "G-B29PRGMNVD"
+};
+
+/* === MANAGER: paste your User UID (Firebase console → Authentication → Users) === */
+const ADMIN_UID = "6kNNweVJOGWhF1QayD64tZObLus2";
+/* ================================================================================ */
+
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const PALETTE=[["#FFE3E3","#8F1D1D"],["#FFEBD6","#8A4B08"],["#FFF6C4","#6E5A00"],["#E3F6E3","#1E6B2E"],["#DDF4F0","#0E5F55"],["#E0EDFF","#1D4E9E"],["#EDE4FF","#5A3EA8"],["#FDE2F0","#9C2A66"],["#EFEAE3","#5C5347"],["#E6E7EC","#44444C"]];
+const uid7=()=>Math.random().toString(36).slice(2,9);
+const codeGen=()=>Array.from({length:6},()=>"ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*31)]).join("");
+const toMin=t=>{const[a,b]=t.split(":").map(Number);return a*60+b};
+const toT=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const fmt=m=>{let h=Math.floor(m/60),mm=m%60,ap=h<12?"am":"pm";h=h%12||12;return h+(mm?":"+String(mm).padStart(2,"0"):"")+" "+ap};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rel=ts=>{if(!ts)return"";const d=(Date.now()-ts)/1000;if(d<60)return"just now";if(d<3600)return Math.floor(d/60)+"m ago";if(d<86400)return Math.floor(d/3600)+"h ago";return new Date(ts).toLocaleDateString()};
+
+const app=document.getElementById("app");
+const overlay=document.getElementById("overlay"),modalBody=document.getElementById("modalBody");
+const toastEl=document.getElementById("toast");let toastT;
+const toast=m=>{toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove("show"),2200)};
+function openModal(h){modalBody.innerHTML=h;overlay.classList.add("open")}
+function closeModal(){overlay.classList.remove("open")}
+overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+const $=id=>document.getElementById(id);
+
+/* ---------- theme (hue) ---------- */
+const DEFAULT_HUE=262;
+const storedHue=parseInt(localStorage.getItem("tt-hue"),10);
+let hue=Number.isFinite(storedHue)?storedHue:DEFAULT_HUE;
+function applyHue(h){document.documentElement.style.setProperty("--hue",h)}
+applyHue(hue);
+function openThemeModal(){
+  openModal(`
+    <h3>Theme color</h3>
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:10px">Slide to pick your color — it applies instantly and follows you on any device.</p>
+    <input type="range" class="huebar" id="hueIn" min="0" max="360" value="${hue}" aria-label="Theme color">
+    <div class="actions">
+      <button class="btn" id="thReset">Reset to purple</button>
+      <button class="btn primary" id="thDone">Done</button>
+    </div>`);
+  $("hueIn").oninput=e=>{hue=+e.target.value;applyHue(hue)};
+  $("thReset").onclick=()=>{hue=DEFAULT_HUE;applyHue(hue);$("hueIn").value=hue};
+  $("thDone").onclick=async()=>{
+    localStorage.setItem("tt-hue",hue);
+    try{await updateDoc(doc(db,"users",myUid),{hue})}catch(e){}
+    closeModal();
+  };
+}
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,getDoc,setDoc,updateDoc,onSnapshot,collection,query,where,getDocs,addDoc,deleteDoc,orderBy,limit,serverTimestamp,arrayUnion,arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const fb=initializeApp(firebaseConfig);
+const auth=getAuth(fb);
+const db=getFirestore(fb);
+
+let me=null, myUid=null;
+let view="tt";                 // 'tt' | 'boards' | 'chats'
+let friendData={}, friendSubs={}, cmp={}, names={};
+let boards=[], activeBoard=null, posts=[], openPost=null;
+let chats=[], openChatId=null, msgs=[];
+let unsubMe=null, unsubBoards=null, unsubPosts=null, unsubChats=null, unsubMsgs=null;
+
+/* ================= AUTH ================= */
+function renderAuth(mode){
+  app.innerHTML=`<div class="gate">
+    <img src="logo.png" width="72" height="72" alt="" style="display:block;margin-bottom:12px">
+    <h1>Timetable</h1>
+    <p class="sub">${mode==="up"?"Create your account":"Welcome back"}</p>
+    ${mode==="up"?`<div class="field"><label>Name</label><input type="text" id="aName" autocomplete="name"></div>`:""}
+    <div class="field"><label>Email</label><input type="email" id="aEmail" autocomplete="email"></div>
+    <div class="field"><label>Password ${mode==="up"?"(6+ characters)":""}</label><input type="password" id="aPw" autocomplete="${mode==="up"?"new-password":"current-password"}"></div>
+    <p class="err" id="aErr"></p>
+    <button class="btn primary" id="aGo" style="width:100%;padding:10px">${mode==="up"?"Sign up":"Sign in"}</button>
+    <p class="switch">${mode==="up"?"Already have an account?":"New here?"} <button id="aSwitch">${mode==="up"?"Sign in":"Create one"}</button></p>
+  </div>`;
+  $("aSwitch").onclick=()=>renderAuth(mode==="up"?"in":"up");
+  $("aGo").onclick=async()=>{
+    const err=$("aErr");err.style.display="none";
+    const em=$("aEmail").value.trim(),pw=$("aPw").value;
+    if(!em||!pw){err.textContent="Enter your email and password";err.style.display="block";return}
+    if(mode==="up"&&!$("aName").value.trim()){err.textContent="Enter your name";err.style.display="block";return}
+    try{
+      if(mode==="up"){
+        const cred=await createUserWithEmailAndPassword(auth,em,pw);
+        let tts=[{id:uid7(),name:"My timetable",classes:[]}];
+        try{const o=JSON.parse(localStorage.getItem("pyounga-timetable-v1"));
+          if(o&&o.timetables&&o.timetables.length)tts=o.timetables}catch(e){}
+        await setDoc(doc(db,"users",cred.user.uid),{
+          name:$("aName").value.trim(),friendCode:codeGen(),friends:[],active:0,timetables:tts,updatedAt:serverTimestamp()});
+      }else{
+        await signInWithEmailAndPassword(auth,em,pw);
+      }
+    }catch(e){
+      const m={"auth/email-already-in-use":"That email already has an account — sign in instead","auth/invalid-credential":"Email or password doesn't match","auth/weak-password":"Password needs at least 6 characters","auth/invalid-email":"That email doesn't look right"};
+      err.textContent=m[e.code]||"Couldn't sign in — check your connection and try again";err.style.display="block";
+    }
+  };
+}
+
+/* ================= SHELL ================= */
+function shell(){
+  app.innerHTML=`<div class="wrap">
+    <header class="top">
+      <div class="wordmark" style="display:flex;align-items:center;gap:9px"><img src="logo.png" width="28" height="28" alt="" style="display:block">Timetable</div>
+      <div class="me">
+        <span id="myName"></span>
+        <button class="chip" id="myCode" title="Tap to copy">code ${esc(me.friendCode)}</button>
+        ${myUid===ADMIN_UID?'<span class="chip">manager</span>':""}
+        <button class="btn small" id="btnTheme" title="Theme color">🎨</button>
+        <button class="btn small" id="btnOut">Sign out</button>
+      </div>
+    </header>
+    <nav class="nav">
+      <button id="navTT" aria-current="${view==="tt"}">Timetable</button>
+      <button id="navBd" aria-current="${view==="boards"}">Boards</button>
+      <button id="navCh" aria-current="${view==="chats"}">Chats</button>
+    </nav>
+    <div id="viewMount"></div>
+    <footer>synced live · board posts and board chats are anonymous to other users</footer>
+  </div>`;
+  $("myName").textContent=me.name;
+  $("myCode").onclick=()=>navigator.clipboard.writeText(me.friendCode).then(()=>toast("Friend code copied"));
+  $("btnTheme").onclick=openThemeModal;
+  $("btnOut").onclick=()=>signOut(auth);
+  $("navTT").onclick=()=>{view="tt";openChatId=null;shell()};
+  $("navBd").onclick=()=>{view="boards";openChatId=null;shell()};
+  $("navCh").onclick=()=>{view="chats";shell()};
+  if(view==="tt")renderTT();
+  else if(view==="boards")renderBoards();
+  else renderChats();
+}
+
+/* ================= TIMETABLE ================= */
+const tt=()=>me.timetables[me.active]||me.timetables[0];
+async function saveMe(){await setDoc(doc(db,"users",myUid),{...me,updatedAt:serverTimestamp()})}
+
+function renderTT(){
+  $("viewMount").innerHTML=`
+    <div class="tabs" id="tabs"></div>
+    <div class="grid-card">
+      <div class="grid-head">
+        <div class="grid-title" id="gridTitle"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary small" id="btnAdd">+ Add</button>
+          <button class="btn small" id="btnRename">Rename</button>
+          <button class="btn small danger" id="btnDelTT">Delete</button>
+        </div>
+      </div>
+      <div id="grid"></div>
+      <p class="tap-hint">Tap an empty slot to add a class right there</p>
+    </div>
+    <section class="section">
+      <h2>Friends</h2>
+      <p class="hint">Ask a friend for their 6-letter code and add them here. Check "compare", then find your shared free time.</p>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <input type="text" id="frCode" placeholder="Friend code e.g. K3XWQP" style="border:1px solid var(--line2);border-radius:8px;padding:7px 11px;text-transform:uppercase;width:200px">
+        <button class="btn primary" id="frAdd">Add friend</button>
+      </div>
+      <div class="friends" id="friendList"></div>
+      <div style="margin-top:12px"><button class="btn primary" id="btnGaps">Find common free time</button></div>
+      <div class="gaps" id="gapsBox" style="display:none"></div>
+    </section>`;
+  renderTabs();renderMyGrid();renderFriends();
+  $("btnAdd").onclick=()=>openClassModal(null,null);
+  $("btnRename").onclick=()=>{const n=prompt("Timetable name",tt().name);if(n){tt().name=n;saveMe()}};
+  $("btnDelTT").onclick=()=>{
+    if(me.timetables.length===1){toast("Keep at least one timetable");return}
+    if(confirm(`Delete "${tt().name}"?`)){me.timetables.splice(me.active,1);me.active=0;saveMe()}};
+  $("frAdd").onclick=addFriend;
+  $("btnGaps").onclick=showGaps;
+}
+
+function renderTabs(){
+  const el=$("tabs");if(!el)return;el.innerHTML="";
+  me.timetables.forEach((t,i)=>{
+    const b=document.createElement("button");b.className="tab";b.textContent=t.name;
+    b.setAttribute("aria-current",i===me.active);
+    b.onclick=()=>{me.active=i;saveMe()};el.appendChild(b)});
+  const add=document.createElement("button");add.className="tab add";add.textContent="+ New";
+  add.onclick=()=>{const n=prompt("Name for the new timetable","Study plan");if(!n)return;
+    me.timetables.push({id:uid7(),name:n,classes:[]});me.active=me.timetables.length-1;saveMe()};
+  el.appendChild(add);
+}
+
+function renderGrid(classes,mount,mine){
+  const used=new Set();classes.forEach(c=>c.sessions.forEach(s=>used.add(s.d)));
+  const ncols=(used.has(5)||used.has(6))?7:5;
+  let minM=9*60,maxM=15*60;
+  classes.forEach(c=>c.sessions.forEach(s=>{minM=Math.min(minM,toMin(s.s));maxM=Math.max(maxM,toMin(s.e))}));
+  minM=Math.floor(minM/60)*60;maxM=Math.ceil(maxM/60)*60;
+  const px=1.05,H=(maxM-minM)*px;
+  const g=document.createElement("div");g.className="tt";g.style.setProperty("--ncols",ncols);
+  g.innerHTML="<div class='corner'></div>"+Array.from({length:ncols},(_,i)=>`<div class='dayhead'>${DAYS[i]}</div>`).join("");
+  const gut=document.createElement("div");gut.className="gutter";gut.style.height=H+"px";
+  for(let m2=minM;m2<=maxM;m2+=60){const lab=document.createElement("span");lab.className="hourlabel";lab.style.top=((m2-minM)*px)+"px";lab.textContent=(m2/60)%12||12;gut.appendChild(lab)}
+  g.appendChild(gut);
+  for(let d=0;d<ncols;d++){
+    const col=document.createElement("div");col.className="col"+(mine?" mine":"");col.style.height=H+"px";
+    for(let m2=minM;m2<=maxM;m2+=60){const l=document.createElement("div");l.className="hourline";l.style.top=((m2-minM)*px)+"px";col.appendChild(l)}
+    if(mine){
+      col.addEventListener("click",e=>{
+        if(e.target!==col)return;
+        const rect=col.getBoundingClientRect();
+        let start=minM+Math.round(((e.clientY-rect.top)/px)/15)*15;
+        start=Math.max(0,Math.min(start,23*60));
+        openClassModal(null,{d,s:toT(start),e:toT(Math.min(start+75,23*60+45))});
+      });
+    }
+    classes.forEach(c=>c.sessions.forEach(s=>{
+      if(s.d!==d)return;
+      const[bg,fg]=PALETTE[c.color%PALETTE.length];
+      const b=document.createElement(mine?"button":"div");b.className="blk";
+      b.style.top=((toMin(s.s)-minM)*px)+"px";b.style.height=Math.max(26,(toMin(s.e)-toMin(s.s))*px-2)+"px";
+      b.style.background=bg;b.style.color=fg;
+      b.innerHTML="<b></b><span class='rm'></span>";
+      b.querySelector("b").textContent=c.title;
+      b.querySelector(".rm").textContent=(c.room?c.room+" · ":"")+fmt(toMin(s.s));
+      if(mine)b.onclick=ev=>{ev.stopPropagation();openClassModal(c,null)};
+      col.appendChild(b);
+    }));
+    g.appendChild(col);
+  }
+  mount.innerHTML="";mount.appendChild(g);
+}
+
+function renderMyGrid(){
+  const gt=$("gridTitle");if(!gt)return;
+  const t=tt();
+  gt.innerHTML=`${esc(t.name)}<span class="sub">${t.classes.length} classes</span>`;
+  renderGrid(t.classes,$("grid"),true);
+}
+
+function sessRow(s){
+  return `<div class="sess">
+    <select class="sd">${DAYS.map((d,i)=>`<option value="${i}" ${s.d===i?"selected":""}>${d}</option>`).join("")}</select>
+    <input type="time" class="ss" value="${s.s}"> – <input type="time" class="se" value="${s.e}">
+    <button type="button" class="x" aria-label="Remove session">✕</button>
+  </div>`;
+}
+function openClassModal(cls,prefill){
+  const isNew=!cls;
+  const c=cls||{id:uid7(),title:"",room:"",memo:"",color:Math.floor(Math.random()*PALETTE.length),
+    sessions:[prefill||{d:0,s:"09:00",e:"10:15"}]};
+  openModal(`
+    <h3>${isNew?"Add a class":"Edit class"}</h3>
+    <div class="field"><label>Class name</label><input type="text" id="fTitle"></div>
+    <div class="field"><label>Room</label><input type="text" id="fRoom"></div>
+    <div class="field"><label>Times</label><div id="sessList"></div>
+      <button class="btn small" type="button" id="fAddSess">+ Add time</button></div>
+    <div class="field"><label>Color</label><div class="swatches" id="fSw"></div></div>
+    <div class="field"><label>Memo</label><textarea id="fMemo"></textarea></div>
+    <p class="err" id="fErr"></p>
+    <div class="actions">
+      ${isNew?"":'<button class="btn danger" id="fDel">Delete</button>'}
+      <button class="btn" id="fCancel">Cancel</button>
+      <button class="btn primary" id="fSave">${isNew?"Add":"Save"}</button>
+    </div>`);
+  $("fTitle").value=c.title;$("fRoom").value=c.room;$("fMemo").value=c.memo||"";
+  let sessions=c.sessions.map(s=>({...s}));
+  const list=$("sessList");
+  const drawSess=()=>{list.innerHTML=sessions.map(sessRow).join("");
+    list.querySelectorAll(".sess").forEach((row,i)=>{
+      row.querySelector(".sd").onchange=e=>sessions[i].d=+e.target.value;
+      row.querySelector(".ss").onchange=e=>sessions[i].s=e.target.value;
+      row.querySelector(".se").onchange=e=>sessions[i].e=e.target.value;
+      row.querySelector(".x").onclick=()=>{sessions.splice(i,1);drawSess()}})};
+  drawSess();
+  $("fAddSess").onclick=()=>{sessions.push({d:0,s:"09:00",e:"10:15"});drawSess()};
+  let color=c.color;const sw=$("fSw");
+  PALETTE.forEach((p,i)=>{const b=document.createElement("button");b.type="button";b.className="sw";
+    b.style.background=p[0];b.style.borderColor=i===color?"var(--ink)":"transparent";
+    b.setAttribute("aria-label","Color "+(i+1));
+    b.onclick=()=>{color=i;[...sw.children].forEach((x,j)=>x.style.borderColor=j===i?"var(--ink)":"transparent")};
+    sw.appendChild(b)});
+  $("fCancel").onclick=closeModal;
+  if(!isNew)$("fDel").onclick=()=>{if(confirm("Delete this class?")){tt().classes=tt().classes.filter(x=>x.id!==c.id);saveMe();closeModal()}};
+  $("fSave").onclick=()=>{
+    const title=$("fTitle").value.trim(),err=$("fErr");
+    if(!title){err.textContent="Enter a class name first";err.style.display="block";return}
+    if(!sessions.length){err.textContent="Add at least one meeting time";err.style.display="block";return}
+    for(const s of sessions){if(!s.s||!s.e||toMin(s.e)<=toMin(s.s)){err.textContent="Each time slot needs a start before its end";err.style.display="block";return}}
+    Object.assign(c,{title,room:$("fRoom").value.trim(),memo:$("fMemo").value.trim(),color,sessions});
+    if(isNew)tt().classes.push(c);
+    saveMe();closeModal();
+  };
+}
+
+/* ---------- friends ---------- */
+async function addFriend(){
+  const code=$("frCode").value.trim().toUpperCase();
+  if(!code){toast("Enter a friend code first");return}
+  if(code===me.friendCode){toast("That's your own code!");return}
+  try{
+    const snap=await getDocs(query(collection(db,"users"),where("friendCode","==",code)));
+    if(snap.empty){toast("No one has that code — double-check it");return}
+    const fUid=snap.docs[0].id;
+    if((me.friends||[]).includes(fUid)){toast("Already added");return}
+    await updateDoc(doc(db,"users",myUid),{friends:arrayUnion(fUid)});
+    $("frCode").value="";toast("Friend added");
+  }catch(e){toast("Couldn't add — check your connection")}
+}
+function syncFriendSubs(){
+  const want=new Set(me.friends||[]);
+  Object.keys(friendSubs).forEach(u=>{if(!want.has(u)){friendSubs[u]();delete friendSubs[u];delete friendData[u]}});
+  want.forEach(u=>{
+    if(friendSubs[u])return;
+    if(cmp[u]===undefined)cmp[u]=true;
+    friendSubs[u]=onSnapshot(doc(db,"users",u),s=>{
+      if(s.exists()){friendData[u]=s.data();names[u]=s.data().name}else delete friendData[u];
+      if(view==="tt")renderFriends();
+    });
+  });
+}
+const classesOf=u=>{const d=friendData[u];if(!d)return[];const t=(d.timetables||[])[d.active||0]||(d.timetables||[])[0];return t?t.classes:[]};
+function renderFriends(){
+  const el=$("friendList");if(!el)return;el.innerHTML="";
+  const fr=me.friends||[];
+  if(!fr.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1">No friends yet — trade codes! Yours is <b>${esc(me.friendCode)}</b>.</div>`;return}
+  fr.forEach(u=>{
+    const d=friendData[u];
+    const card=document.createElement("div");card.className="friend";
+    card.innerHTML=`<div class="nm">${d?esc(d.name):"Loading…"}</div>
+      <div class="meta">${d?classesOf(u).length+" classes · live":"…"}</div>
+      <div class="row">
+        <button class="btn small" data-a="view" ${d?"":"disabled"}>View</button>
+        <button class="btn small" data-a="chat" ${d?"":"disabled"}>Chat</button>
+        <button class="btn small danger" data-a="del">Remove</button>
+        <label><input type="checkbox" ${cmp[u]?"checked":""}> compare</label>
+      </div>`;
+    card.querySelector("[data-a=view]").onclick=()=>{if(!d)return;
+      openModal(`<h3></h3><div id="fGrid" style="overflow-x:auto"></div><div class="actions"><button class="btn" id="fvC">Close</button></div>`);
+      modalBody.querySelector("h3").textContent=d.name+"'s timetable";
+      renderGrid(classesOf(u),$("fGrid"),false);$("fvC").onclick=closeModal};
+    card.querySelector("[data-a=chat]").onclick=()=>startFriendChat(u);
+    card.querySelector("[data-a=del]").onclick=async()=>{if(confirm("Remove this friend?")){await updateDoc(doc(db,"users",myUid),{friends:arrayRemove(u)})}};
+    card.querySelector("input").onchange=e=>{cmp[u]=e.target.checked};
+    el.appendChild(card);
+  });
+}
+function showGaps(){
+  const ppl=[{name:"Me",classes:tt().classes},
+    ...(me.friends||[]).filter(u=>cmp[u]&&friendData[u]).map(u=>({name:friendData[u].name,classes:classesOf(u)}))];
+  const box=$("gapsBox");box.style.display="block";
+  const dayStart=8*60,dayEnd=18*60;
+  let html=`<h3>Everyone free · ${ppl.length===1?"just you — check a friend's \u201Ccompare\u201D box to overlap":"you + "+(ppl.length-1)+" friend"+(ppl.length>2?"s":"")}</h3>`;
+  for(let d=0;d<5;d++){
+    let busy=[];ppl.forEach(p=>p.classes.forEach(c=>c.sessions.forEach(s=>{if(s.d===d)busy.push([toMin(s.s),toMin(s.e)])})));
+    busy.sort((a,b)=>a[0]-b[0]);
+    const merged=[];busy.forEach(iv=>{if(merged.length&&iv[0]<=merged[merged.length-1][1])merged[merged.length-1][1]=Math.max(merged[merged.length-1][1],iv[1]);else merged.push([...iv])});
+    const free=[];let cur=dayStart;
+    merged.forEach(iv=>{if(iv[0]-cur>=30)free.push([cur,iv[0]]);cur=Math.max(cur,iv[1])});
+    if(dayEnd-cur>=30)free.push([cur,dayEnd]);
+    html+=`<div class="day"><span class="dname">${DAYS[d]}</span><span>${free.length?free.map(f=>`<span class="slot">${fmt(f[0])} – ${fmt(f[1])}</span>`).join(""):`<span class="none">no shared gap ≥ 30 min</span>`}</span></div>`;
+  }
+  box.innerHTML=html;box.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+/* ================= BOARDS ================= */
+async function ensureDefaultBoards(){
+  try{
+    const snap=await getDocs(query(collection(db,"boards"),limit(1)));
+    if(!snap.empty)return;
+    const defs=[["free","Free Board","Anything goes"],["questions","Class Questions","Cold calls, outlines, exam prep"],["market","Flea Market","Buy and sell — casebooks, furniture, anything"],["jobs","Work Opportunities","Clerkships, RA positions, part-time work"]];
+    for(const[id,name,desc]of defs){
+      try{await setDoc(doc(db,"boards",id),{name,desc,uid:myUid,createdAt:serverTimestamp()})}catch(e){}
+    }
+  }catch(e){}
+}
+function renderBoards(){
+  $("viewMount").innerHTML=`
+    <div class="boardbar" id="boardBar"></div>
+    <p class="board-desc" id="boardDesc"></p>
+    <div class="board-compose">
+      <textarea id="bTxt" maxlength="2000" placeholder="Write a post… (shown as Anonymous)"></textarea>
+      <div class="row"><span class="anon">posting as <b>Anonymous</b> — your name is never shown</span>
+      <button class="btn primary" id="bPost">Post</button></div>
+      <p class="err" id="bErr"></p>
+    </div>
+    <div id="postList"></div>`;
+  drawBoardBar();
+  $("bPost").onclick=async()=>{
+    const t=$("bTxt").value.trim(),err=$("bErr");
+    if(!activeBoard){err.textContent="Pick a board first";err.style.display="block";return}
+    if(!t){err.textContent="Write something first";err.style.display="block";return}
+    err.style.display="none";$("bTxt").value="";
+    try{await addDoc(collection(db,"posts"),{uid:myUid,board:activeBoard,text:t,createdAt:serverTimestamp(),comments:[]})}
+    catch(e){err.textContent="Couldn't post — check your connection";err.style.display="block"}
+  };
+  drawPosts();
+}
+function drawBoardBar(){
+  const bar=$("boardBar");if(!bar)return;bar.innerHTML="";
+  boards.forEach(b=>{
+    const btn=document.createElement("button");btn.className="tab";btn.textContent=b.name;
+    btn.setAttribute("aria-current",b.id===activeBoard);
+    btn.onclick=()=>{activeBoard=b.id;subscribePosts();drawBoardBar()};
+    bar.appendChild(btn);
+  });
+  const add=document.createElement("button");add.className="tab add";add.textContent="+ New board";
+  add.onclick=openBoardModal;bar.appendChild(add);
+  const d=$("boardDesc");
+  const cur=boards.find(b=>b.id===activeBoard);
+  if(d){
+    d.innerHTML=cur?esc(cur.desc||""):"";
+    if(cur&&myUid===ADMIN_UID){
+      const del=document.createElement("button");
+      del.className="btn small danger";del.style.marginLeft="10px";del.textContent="Delete board";
+      del.onclick=()=>deleteBoard(cur);
+      d.appendChild(del);
+    }
+  }
+}
+async function deleteBoard(b){
+  if(!confirm(`Delete the board "${b.name}" and all of its posts? This can't be undone.`))return;
+  try{
+    const snap=await getDocs(query(collection(db,"posts"),where("board","==",b.id)));
+    for(const p of snap.docs){await deleteDoc(doc(db,"posts",p.id))}
+    await deleteDoc(doc(db,"boards",b.id));
+    activeBoard=null;
+    toast("Board deleted");
+  }catch(e){toast("Couldn't delete — manager permissions missing?")}
+}
+function openBoardModal(){
+  openModal(`
+    <h3>Create a board</h3>
+    <div class="field"><label>Board name</label><input type="text" id="nbName" maxlength="40" placeholder="e.g. Study Groups"></div>
+    <div class="field"><label>Description (optional)</label><input type="text" id="nbDesc" maxlength="80" placeholder="What is this board for?"></div>
+    <p class="err" id="nbErr"></p>
+    <div class="actions"><button class="btn" id="nbCancel">Cancel</button><button class="btn primary" id="nbGo">Create</button></div>`);
+  $("nbCancel").onclick=closeModal;
+  $("nbGo").onclick=async()=>{
+    const name=$("nbName").value.trim(),err=$("nbErr");
+    if(!name){err.textContent="Give the board a name";err.style.display="block";return}
+    if(boards.some(b=>b.name.toLowerCase()===name.toLowerCase())){err.textContent="A board with that name already exists";err.style.display="block";return}
+    try{
+      const ref=await addDoc(collection(db,"boards"),{name,desc:$("nbDesc").value.trim(),uid:myUid,createdAt:serverTimestamp()});
+      activeBoard=ref.id;closeModal();toast("Board created");
+    }catch(e){err.textContent="Couldn't create — check your connection";err.style.display="block"}
+  };
+}
+function subscribePosts(){
+  if(unsubPosts){unsubPosts();unsubPosts=null}
+  posts=[];openPost=null;drawPosts();
+  if(!activeBoard)return;
+  unsubPosts=onSnapshot(query(collection(db,"posts"),where("board","==",activeBoard),limit(150)),s=>{
+    posts=s.docs.map(x=>({id:x.id,...x.data()}));
+    posts.sort((a,b)=>((b.createdAt&&b.createdAt.toMillis)?b.createdAt.toMillis():Date.now())-((a.createdAt&&a.createdAt.toMillis)?a.createdAt.toMillis():Date.now()));
+    if(view==="boards")drawPosts();
+  });
+}
+function drawPosts(){
+  const el=$("postList");if(!el)return;el.innerHTML="";
+  if(!activeBoard){el.innerHTML=`<div class="empty" style="margin-top:12px">Pick a board above, or create your own.</div>`;return}
+  if(!posts.length){el.innerHTML=`<div class="empty" style="margin-top:12px">No posts here yet — start the conversation.</div>`;return}
+  posts.forEach(p=>{
+    const d=document.createElement("div");d.className="post";
+    const ts=p.createdAt&&p.createdAt.toMillis?p.createdAt.toMillis():null;
+    const cmts=p.comments||[];
+    d.innerHTML=`<div class="meta"><b>Anonymous</b><span>${rel(ts)}</span></div>
+      <div class="txt">${esc(p.text)}</div>
+      <div class="foot">
+        <button data-a="cm">${cmts.length} comment${cmts.length===1?"":"s"}</button>
+        ${p.uid!==myUid?'<button data-a="msg">Message author</button>':""}
+        ${(p.uid===myUid||myUid===ADMIN_UID)?'<button data-a="del">Delete</button>':""}
+      </div>
+      <div class="cmts" style="display:${openPost===p.id?"block":"none"}">
+        ${cmts.map((c,i)=>`<div class="cmt"><span class="who">Anonymous</span>${esc(c.text)}<span class="when">${rel(c.at)}</span>${(c.uid===myUid||myUid===ADMIN_UID)?`<button class="cx" data-i="${i}" aria-label="Delete comment">✕</button>`:""}</div>`).join("")}
+        <div class="cmt-row"><input type="text" placeholder="Add a comment (anonymous)" maxlength="500"><button class="btn small primary">Reply</button></div>
+      </div>`;
+    d.querySelectorAll(".cx").forEach(btn=>{
+      btn.onclick=async()=>{
+        const c=cmts[+btn.dataset.i];
+        if(!confirm("Delete this comment?"))return;
+        try{await updateDoc(doc(db,"posts",p.id),{comments:arrayRemove(c)})}
+        catch(e){toast("Couldn't delete comment")}
+      };
+    });
+    d.querySelector("[data-a=cm]").onclick=()=>{openPost=openPost===p.id?null:p.id;drawPosts()};
+    const msg=d.querySelector("[data-a=msg]");
+    if(msg)msg.onclick=()=>startAnonChat(p);
+    const del=d.querySelector("[data-a=del]");
+    if(del)del.onclick=async()=>{if(confirm("Delete this post?"))await deleteDoc(doc(db,"posts",p.id))};
+    const row=d.querySelector(".cmt-row");
+    row.querySelector("button").onclick=async()=>{
+      const inp=row.querySelector("input"),t=inp.value.trim();
+      if(!t){inp.focus();return}
+      inp.value="";
+      await updateDoc(doc(db,"posts",p.id),{comments:arrayUnion({uid:myUid,text:t,at:Date.now()})});
+    };
+    el.appendChild(d);
+  });
+}
+
+/* ================= CHATS ================= */
+async function startFriendChat(u){
+  const id=[myUid,u].sort().join("_");
+  try{
+    await setDoc(doc(db,"chats",id),{members:[myUid,u],anon:false,lastAt:Date.now()},{merge:true});
+    openChatId=id;view="chats";shell();
+  }catch(e){toast("Couldn't open chat")}
+}
+async function startAnonChat(post){
+  if(post.uid===myUid)return;
+  const id="anon_"+post.id+"_"+myUid;
+  try{
+    await setDoc(doc(db,"chats",id),{members:[post.uid,myUid],anon:true,starter:myUid,
+      postExcerpt:post.text.slice(0,60),lastAt:Date.now()},{merge:true});
+    openChatId=id;view="chats";shell();
+  }catch(e){toast("Couldn't open chat")}
+}
+function chatLabel(c){
+  if(c.anon){
+    const role=c.starter===myUid?"Post author":"Anonymous";
+    return {who:role,tag:"anonymous",ctx:c.postExcerpt?('re: "'+c.postExcerpt+'"'):""};
+  }
+  const other=(c.members||[]).find(u=>u!==myUid);
+  return {who:names[other]||"…",tag:"",ctx:""};
+}
+async function resolveNames(){
+  const need=new Set();
+  chats.forEach(c=>{if(!c.anon){const o=(c.members||[]).find(u=>u!==myUid);if(o&&!names[o])need.add(o)}});
+  for(const u of need){
+    try{const s=await getDoc(doc(db,"users",u));if(s.exists())names[u]=s.data().name}catch(e){}
+  }
+  if(need.size&&view==="chats"&&!openChatId)drawChatList();
+}
+function renderChats(){
+  if(openChatId){renderThread();return}
+  $("viewMount").innerHTML=`
+    <h2 style="font-family:var(--display);font-size:20px;margin-bottom:4px">Chats</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:10px">Message friends from their card on the Timetable tab, or message a post's author from any board. Board chats stay anonymous both ways.</p>
+    <div class="chatlist" id="chatList"></div>`;
+  drawChatList();
+}
+function drawChatList(){
+  const el=$("chatList");if(!el)return;el.innerHTML="";
+  if(!chats.length){el.innerHTML=`<div class="empty">No chats yet. Say hi to a friend, or tap "Message author" on a board post.</div>`;return}
+  chats.forEach(c=>{
+    const l=chatLabel(c);
+    const item=document.createElement("div");item.className="item";item.setAttribute("role","button");item.tabIndex=0;
+    item.innerHTML=`<div style="min-width:0"><div class="who">${esc(l.who)}${l.tag?`<span class="tag">${l.tag}</span>`:""}</div>
+      <div class="last">${esc(c.lastMsg||l.ctx||"New chat")}</div></div>
+      <div class="when">${rel(c.lastAt)}</div>`;
+    const open=()=>{openChatId=c.id;renderThread()};
+    item.onclick=open;item.onkeydown=e=>{if(e.key==="Enter")open()};
+    el.appendChild(item);
+  });
+}
+function renderThread(){
+  const c=chats.find(x=>x.id===openChatId);
+  if(!c){openChatId=null;renderChats();return}
+  const l=chatLabel(c);
+  $("viewMount").innerHTML=`
+    <div class="thread">
+      <div class="head">
+        <button class="btn small" id="chBack">← Back</button>
+        <div style="min-width:0"><div class="who">${esc(l.who)}${l.tag?` <span class="tag" style="font-size:11px;color:var(--accent-dark);background:var(--accent-soft);border-radius:999px;padding:1px 8px">${l.tag}</span>`:""}</div>
+        ${l.ctx?`<div class="ctx">${esc(l.ctx)}</div>`:""}</div>
+      </div>
+      <div class="msgs" id="msgs"></div>
+      <div class="sendrow"><input type="text" id="msgIn" maxlength="1000" placeholder="Type a message…"><button class="btn primary" id="msgGo">Send</button></div>
+    </div>`;
+  $("chBack").onclick=()=>{openChatId=null;if(unsubMsgs){unsubMsgs();unsubMsgs=null}renderChats()};
+  const send=async()=>{
+    const inp=$("msgIn"),t=inp.value.trim();
+    if(!t)return;inp.value="";inp.focus();
+    try{
+      await addDoc(collection(db,"chats",c.id,"messages"),{uid:myUid,text:t,at:Date.now()});
+      await updateDoc(doc(db,"chats",c.id),{lastMsg:t.slice(0,60),lastAt:Date.now()});
+    }catch(e){toast("Couldn't send — check your connection")}
+  };
+  $("msgGo").onclick=send;
+  $("msgIn").addEventListener("keydown",e=>{if(e.key==="Enter")send()});
+  if(unsubMsgs)unsubMsgs();
+  unsubMsgs=onSnapshot(query(collection(db,"chats",c.id,"messages"),orderBy("at"),limit(300)),s=>{
+    msgs=s.docs.map(x=>x.data());
+    drawMsgs(c);
+  });
+}
+function drawMsgs(c){
+  const el=$("msgs");if(!el)return;el.innerHTML="";
+  msgs.forEach(m=>{
+    const d=document.createElement("div");
+    d.className="msg "+(m.uid===myUid?"mine":"theirs");
+    d.innerHTML=`${esc(m.text)}<span class="t">${rel(m.at)}</span>`;
+    el.appendChild(d);
+  });
+  el.scrollTop=el.scrollHeight;
+}
+
+/* ================= WIRING ================= */
+onAuthStateChanged(auth,async user=>{
+  [unsubMe,unsubBoards,unsubPosts,unsubChats,unsubMsgs].forEach(u=>{if(u)u()});
+  unsubMe=unsubBoards=unsubPosts=unsubChats=unsubMsgs=null;
+  Object.values(friendSubs).forEach(f=>f());friendSubs={};friendData={};
+  chats=[];posts=[];boards=[];openChatId=null;activeBoard=null;
+  if(!user){me=null;myUid=null;renderAuth("in");return}
+  myUid=user.uid;
+  const ref=doc(db,"users",myUid);
+  const first=await getDoc(ref);
+  if(!first.exists()){
+    await setDoc(ref,{name:"Student",friendCode:codeGen(),friends:[],active:0,
+      timetables:[{id:uid7(),name:"My timetable",classes:[]}],updatedAt:serverTimestamp()});
+  }
+  await ensureDefaultBoards();
+  unsubMe=onSnapshot(ref,s=>{
+    if(!s.exists())return;
+    me=s.data();
+    if(typeof me.hue==="number"&&me.hue!==hue){hue=me.hue;applyHue(hue);localStorage.setItem("tt-hue",hue)}
+    if(!document.querySelector(".nav"))shell();
+    else if(view==="tt"){renderTabs();renderMyGrid();renderFriends()}
+    syncFriendSubs();
+  });
+  unsubBoards=onSnapshot(collection(db,"boards"),s=>{
+    boards=s.docs.map(x=>({id:x.id,...x.data()}));
+    boards.sort((a,b)=>((a.createdAt&&a.createdAt.toMillis)?a.createdAt.toMillis():0)-((b.createdAt&&b.createdAt.toMillis)?b.createdAt.toMillis():0));
+    if(!activeBoard&&boards.length){activeBoard=boards[0].id;subscribePosts()}
+    if(view==="boards")drawBoardBar();
+  });
+  unsubChats=onSnapshot(query(collection(db,"chats"),where("members","array-contains",myUid)),s=>{
+    chats=s.docs.map(x=>({id:x.id,...x.data()}));
+    chats.sort((a,b)=>(b.lastAt||0)-(a.lastAt||0));
+    resolveNames();
+    if(view==="chats"){if(openChatId)renderThread._skip=true;else drawChatList()}
+  });
+});
+</script>
+</body>
+</html>
