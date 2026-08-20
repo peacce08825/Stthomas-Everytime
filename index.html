@@ -107,6 +107,8 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:10p
 .cmt:first-child{border-top:none}
 .cmt .who{font-weight:700;color:var(--accent-dark);font-size:12.5px;margin-right:6px}
 .cmt .when{color:var(--faint);font-size:11.5px;margin-left:6px}
+.cmt .cx{border:none;background:none;color:var(--faint);font-size:12px;padding:0 2px;margin-left:8px;cursor:pointer}
+.cmt .cx:hover{color:var(--accent)}
 .cmt-row{display:flex;gap:6px;margin-top:8px}
 .cmt-row input{flex:1;border:1px solid var(--line2);border-radius:8px;padding:7px 10px;background:#fff}
 
@@ -621,9 +623,17 @@ function drawPosts(){
         ${(p.uid===myUid||myUid===ADMIN_UID)?'<button data-a="del">Delete</button>':""}
       </div>
       <div class="cmts" style="display:${openPost===p.id?"block":"none"}">
-        ${cmts.map(c=>`<div class="cmt"><span class="who">Anonymous</span>${esc(c.text)}<span class="when">${rel(c.at)}</span></div>`).join("")}
+        ${cmts.map((c,i)=>`<div class="cmt"><span class="who">Anonymous</span>${esc(c.text)}<span class="when">${rel(c.at)}</span>${(c.uid===myUid||myUid===ADMIN_UID)?`<button class="cx" data-i="${i}" aria-label="Delete comment">✕</button>`:""}</div>`).join("")}
         <div class="cmt-row"><input type="text" placeholder="Add a comment (anonymous)" maxlength="500"><button class="btn small primary">Reply</button></div>
       </div>`;
+    d.querySelectorAll(".cx").forEach(btn=>{
+      btn.onclick=async()=>{
+        const c=cmts[+btn.dataset.i];
+        if(!confirm("Delete this comment?"))return;
+        try{await updateDoc(doc(db,"posts",p.id),{comments:arrayRemove(c)})}
+        catch(e){toast("Couldn't delete comment")}
+      };
+    });
     d.querySelector("[data-a=cm]").onclick=()=>{openPost=openPost===p.id?null:p.id;drawPosts()};
     const msg=d.querySelector("[data-a=msg]");
     if(msg)msg.onclick=()=>startAnonChat(p);
@@ -634,7 +644,7 @@ function drawPosts(){
       const inp=row.querySelector("input"),t=inp.value.trim();
       if(!t){inp.focus();return}
       inp.value="";
-      await updateDoc(doc(db,"posts",p.id),{comments:arrayUnion({text:t,at:Date.now()})});
+      await updateDoc(doc(db,"posts",p.id),{comments:arrayUnion({uid:myUid,text:t,at:Date.now()})});
     };
     el.appendChild(d);
   });
