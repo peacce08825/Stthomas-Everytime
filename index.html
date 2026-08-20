@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Timetable</title>
+<meta name="theme-color" content="#6C5CE7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Timetable">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -147,6 +153,15 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:10p
 .gate .switch button{border:none;background:none;color:var(--accent);font-weight:700;font-size:13.5px}
 footer{margin-top:44px;color:var(--faint);font-size:12.5px;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:640px){
+  .tt{min-width:0;grid-template-columns:26px repeat(var(--ncols),1fr)}
+  .grid-head,.tap-hint{min-width:0}
+  .hourlabel{font-size:8.5px;right:2px}
+  .blk{font-size:9px;line-height:1.3;padding:3px 4px;left:1px;right:1px;width:calc(100% - 2px);border-radius:5px}
+  .blk b{font-size:9.5px}
+  .chatlist .last{max-width:46vw}
+  .thread{height:76vh}
+}
 </style>
 </head>
 <body>
@@ -164,6 +179,10 @@ const firebaseConfig = {
   appId: "1:800575907881:web:a8a06f3e382ed37bf89438",
   measurementId: "G-B29PRGMNVD"
 };
+
+/* === MANAGER: paste your User UID (Firebase console → Authentication → Users) === */
+const ADMIN_UID = "6kNNweVJOGWhF1QayD64tZObLus2";
+/* ================================================================================ */
 
 const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const PALETTE=[["#FFE3E3","#8F1D1D"],["#FFEBD6","#8A4B08"],["#FFF6C4","#6E5A00"],["#E3F6E3","#1E6B2E"],["#DDF4F0","#0E5F55"],["#E0EDFF","#1D4E9E"],["#EDE4FF","#5A3EA8"],["#FDE2F0","#9C2A66"],["#EFEAE3","#5C5347"],["#E6E7EC","#44444C"]];
@@ -203,6 +222,7 @@ let unsubMe=null, unsubBoards=null, unsubPosts=null, unsubChats=null, unsubMsgs=
 /* ================= AUTH ================= */
 function renderAuth(mode){
   app.innerHTML=`<div class="gate">
+    <img src="logo.png" width="72" height="72" alt="" style="display:block;margin-bottom:12px">
     <h1>Timetable</h1>
     <p class="sub">${mode==="up"?"Create your account":"Welcome back"}</p>
     ${mode==="up"?`<div class="field"><label>Name</label><input type="text" id="aName" autocomplete="name"></div>`:""}
@@ -240,10 +260,11 @@ function renderAuth(mode){
 function shell(){
   app.innerHTML=`<div class="wrap">
     <header class="top">
-      <div class="wordmark">Timetable</div>
+      <div class="wordmark" style="display:flex;align-items:center;gap:9px"><img src="logo.png" width="28" height="28" alt="" style="display:block">Timetable</div>
       <div class="me">
         <span id="myName"></span>
         <button class="chip" id="myCode" title="Tap to copy">code ${esc(me.friendCode)}</button>
+        ${myUid===ADMIN_UID?'<span class="chip" style="background:#EDE4FF;color:#4B3FC4">manager</span>':""}
         <button class="btn small" id="btnOut">Sign out</button>
       </div>
     </header>
@@ -536,7 +557,25 @@ function drawBoardBar(){
   add.onclick=openBoardModal;bar.appendChild(add);
   const d=$("boardDesc");
   const cur=boards.find(b=>b.id===activeBoard);
-  if(d)d.textContent=cur?(cur.desc||""):"";
+  if(d){
+    d.innerHTML=cur?esc(cur.desc||""):"";
+    if(cur&&myUid===ADMIN_UID){
+      const del=document.createElement("button");
+      del.className="btn small danger";del.style.marginLeft="10px";del.textContent="Delete board";
+      del.onclick=()=>deleteBoard(cur);
+      d.appendChild(del);
+    }
+  }
+}
+async function deleteBoard(b){
+  if(!confirm(`Delete the board "${b.name}" and all of its posts? This can't be undone.`))return;
+  try{
+    const snap=await getDocs(query(collection(db,"posts"),where("board","==",b.id)));
+    for(const p of snap.docs){await deleteDoc(doc(db,"posts",p.id))}
+    await deleteDoc(doc(db,"boards",b.id));
+    activeBoard=null;
+    toast("Board deleted");
+  }catch(e){toast("Couldn't delete — manager permissions missing?")}
 }
 function openBoardModal(){
   openModal(`
@@ -579,7 +618,7 @@ function drawPosts(){
       <div class="foot">
         <button data-a="cm">${cmts.length} comment${cmts.length===1?"":"s"}</button>
         ${p.uid!==myUid?'<button data-a="msg">Message author</button>':""}
-        ${p.uid===myUid?'<button data-a="del">Delete</button>':""}
+        ${(p.uid===myUid||myUid===ADMIN_UID)?'<button data-a="del">Delete</button>':""}
       </div>
       <div class="cmts" style="display:${openPost===p.id?"block":"none"}">
         ${cmts.map(c=>`<div class="cmt"><span class="who">Anonymous</span>${esc(c.text)}<span class="when">${rel(c.at)}</span></div>`).join("")}
